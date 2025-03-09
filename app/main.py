@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
 
-from app.clients.openai import openai_client
+from app.agent.agent import agent
 from app.schemas.schemas import Question, Response
 from app.settings import APP_TITLE
 
@@ -25,7 +25,8 @@ def docs_redirect() -> RedirectResponse:
 )
 async def question(question: Question) -> Response:
     try:
-        response = await openai_client.generate_response(question.text)
+        response = agent.run(question.text, reset=False)
+        agent.write_memory_to_messages()
         return Response(text=response)
     except Exception as e:
         logger.error(f"Error generating response: {str(e)}")

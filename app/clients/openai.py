@@ -1,4 +1,4 @@
-from openai import AsyncOpenAI, InternalServerError, RateLimitError
+from openai import InternalServerError, OpenAI, RateLimitError
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionSystemMessageParam,
@@ -25,8 +25,8 @@ SYSTEM_PROMPT = (
 
 class OpenAIClient:
     def __init__(self):
-        self.client = AsyncOpenAI(
-            base_url=f"{str(settings.llm_host)}v1",  # pydantic adds trailing slash
+        self.client = OpenAI(
+            base_url=f"{str(settings.llm_host)}",  # pydantic adds trailing slash
             api_key=settings.llm_api_key,  # required, but unused
         )
 
@@ -49,6 +49,12 @@ class OpenAIClient:
             messages=[system_prompt, message],
         )
         return response.choices[0].message.content
+
+    def get_embedding(self, text: str) -> list[float]:
+        response: ChatCompletion = self.client.embeddings.create(
+            model=settings.embedding_model_name, input=text
+        )
+        return response.data[0].embedding
 
 
 openai_client = OpenAIClient()
