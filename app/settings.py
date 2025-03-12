@@ -1,7 +1,7 @@
 from pydantic import AnyUrl, Field
 from pydantic_settings import BaseSettings
 
-APP_TITLE = "LLMChat Veeam"
+APP_TITLE = "Movie Recommendation Assistant"
 
 
 class Settings(BaseSettings):

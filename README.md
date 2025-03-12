@@ -1,8 +1,6 @@
-# Veeam LLM Chat
+# Movie Recommendation Bot
 
-A FastAPI application that provides a chat interface for any LLM which supports the OpenAI interface.
-
-It is expected that the client will handle the raised exceptions and provide a user-friendly error message to the user in case of invalid input (422).
+A FastAPI application that provides a chat interface for the agent which can assist the user to choose the film to watch based on their preferences.
 
 ## Prerequisites
 
@@ -17,7 +15,7 @@ It is expected that the client will handle the raised exceptions and provide a u
 ### LLM
 * To stay LLM agnostic, we use the OpenAI interface so that we can easily switch to any other LLM that supports the OpenAI interface.
     * You can even use the OpenAI API directly, adjust the .env file with the correct API key, host and model name.
-* We recommend using Ollama for local development.
+* Ollama for local development is the ideal setup.
 * To install Ollama follow: https://ollama.com/download
 
 ### pre-commit
