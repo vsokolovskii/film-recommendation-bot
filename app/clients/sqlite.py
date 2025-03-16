@@ -323,7 +323,7 @@ class SQLiteClient:
 
     def get_most_similar_movies(
         self,
-        embedding: List[float],
+        preferences: Dict[str, Any],
         limit: int = 5,
         genres: List[str] = None,
         year_range: tuple = None,
@@ -340,6 +340,8 @@ class SQLiteClient:
         Returns:
             List[MovieInfo]: List of most similar movies
         """
+        embedding = preferences["embedding"]
+        watched_movies = preferences["favourite_movies"]
         conn = self._get_connection()
         cursor = conn.cursor()
 

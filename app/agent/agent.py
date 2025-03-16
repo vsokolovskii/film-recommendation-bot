@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Define tools
 @tool
-def store_user_preference(user_id: str = "1", preferences: PreferenceData = None) -> str:
+def store_user_preference(user_id: str, preferences: PreferenceData) -> str:
     """
     After the model has asked the user about their movie preferences, store the preferences in the database.
     Derive the names of the favourite movies from the chat with the user. Derive the genre of the movies from their names.
@@ -160,7 +160,7 @@ def suggest_movies(
     preferences = get_user_preferences(user_id)
     # Get trending movies
     trending_movies = sqlite_client.get_most_similar_movies(
-        preferences["embedding"], limit=5, genres=genres, year_range=year_range
+        preferences, limit=5, genres=genres, year_range=year_range
     )
 
     return trending_movies

@@ -1,9 +1,10 @@
-import telebot
 import logging
 
-from app.settings import settings
+import telebot
+
 from app.agent.agent import agent
 from app.clients.sqlite import sqlite_client
+from app.settings import settings
 
 logger = logging.getLogger(__name__)
 
