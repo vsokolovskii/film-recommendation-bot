@@ -2,6 +2,14 @@
 
 A FastAPI application that provides a chat interface for the agent which can assist the user to choose the film to watch based on their preferences.
 
+It is connected to the Telegram bot.
+
+What this app does:
+1. Scrapes the TMDB public API for the trending movies, it does it every day.
+2. Prompts the user to provide the information about their favourite movies.
+3. Once the info about the movies is obtained the agent will search the TMDB to find those movies in the DB, it will get their overview and embed it using the OpenAI embedding model, it will just dummily average over embeddings of all liked movies.
+4. It will do the initial prefiltering by the year of realese and genre and then it will do the dot product of matrix of embeddings of trending films which passed the initial prefilling and pick the top 5 similar films and suggests them to the user.
+
 ## Prerequisites
 
 
@@ -61,6 +69,7 @@ You can also open the telegram bot to talk to the Movie Recommender @rohlik_movi
 * Smolagent does not have the async interface by default, so the app will not be easily scalable.
 * How the recommendation system works is suboptimal, it filters out by genres and years first and then does the embedding similarity, ideally we would extract some features from the description of the film from the wiki, not the film overview since it can be misleading very often.
 * In general the app is very raw since I developed it in a couple of days for the Rohlik task.
+* The agent just sends the URLS to the posters, we could download them using the API and send like an image in telegram.
 
 
 
