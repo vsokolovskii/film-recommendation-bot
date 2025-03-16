@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from app.agent.agent import PreferenceData
+from app.clients.openai import openai_client
+from app.schemas.schemas import MovieInfo
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 class SQLiteClient:
     """Client for interacting with SQLite database to store user film preferences."""
 
-    def __init__(self, db_path: str = "user_preferences.db"):
+    def __init__(self, db_path: str = "movies_recommender.db"):
         """
         Initialize the SQLite client.
 
@@ -43,7 +45,6 @@ class SQLiteClient:
             conn = self._get_connection()
             cursor = conn.cursor()
 
-            # Create users table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +53,6 @@ class SQLiteClient:
             )
             """)
 
-            # Create preferences table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS preferences (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,27 +68,14 @@ class SQLiteClient:
             )
             """)
 
-            # Create watched_movies table
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS watched_movies (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT NOT NULL,
-                movie_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                rating INTEGER,
-                watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(user_id)
-            )
-            """)
-
-            # Create movie_embeddings table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS movie_embeddings (
-                movie_id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 title TEXT NOT NULL,
                 embedding TEXT NOT NULL,
                 genre_ids TEXT,
                 overview TEXT,
+                poster_path TEXT,
                 release_date TEXT,
                 vote_average REAL,
                 popularity REAL,
@@ -176,8 +163,8 @@ class SQLiteClient:
                     WHERE user_id = ?
                     """,
                     (
-                        ",".join(preferences.genre),
-                        ";".join(preferences.favourite_movies)
+                        ",".join(set(preferences.genre)),
+                        ";".join(set(preferences.favourite_movies))
                         if preferences.favourite_movies
                         else None,
                         preference_text,
@@ -199,8 +186,8 @@ class SQLiteClient:
                     """,
                     (
                         user_id,
-                        ",".join(preferences.genre),
-                        ";".join(preferences.favourite_movies)
+                        ",".join(set(preferences.genre)),
+                        ";".join(set(preferences.favourite_movies))
                         if preferences.favourite_movies
                         else None,
                         preference_text,
@@ -291,6 +278,133 @@ class SQLiteClient:
             float: Cosine similarity (-1 to 1)
         """
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+    def insert_movie(self, movie: MovieInfo, genres: list[str]):
+        """
+        Insert a movie into the movie_embeddings table.
+
+        Args:
+            movie: MovieInfo object containing movie details
+
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            # Check if movie already exists
+            cursor.execute("SELECT id FROM movie_embeddings WHERE id = ?", (movie.id,))
+            if cursor.fetchone() is None:
+                # Insert new movie
+                cursor.execute(
+                    """
+                INSERT INTO movie_embeddings (id, title, embedding, genre_ids, overview, poster_path, release_date, vote_average, popularity)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        movie.id,
+                        movie.title,
+                        json.dumps(openai_client.get_embedding(movie.overview)),
+                        json.dumps(genres) if genres else None,
+                        movie.overview,
+                        movie.poster_path,
+                        movie.release_date,
+                        movie.vote_average,
+                        movie.popularity,
+                    ),
+                )
+
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.error(f"Error inserting movie: {str(e)}")
+
+    def get_most_similar_movies(
+        self,
+        embedding: List[float],
+        limit: int = 5,
+        genres: List[str] = None,
+        year_range: tuple = None,
+    ) -> List[MovieInfo]:
+        """
+        Get the most similar movies to a given embedding.
+
+        Args:
+            embedding: Embedding vector
+            limit: Maximum number of similar movies to return
+            genres: Optional list of genres to filter by
+            year_range: Optional tuple of (start_year, end_year) to filter by
+
+        Returns:
+            List[MovieInfo]: List of most similar movies
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Build the query based on filters
+            query = "SELECT id, title, embedding, genre_ids, overview, poster_path, release_date, vote_average, popularity FROM movie_embeddings"
+            params = []
+            conditions = []
+
+            # Apply genre filter if provided
+            if genres and len(genres) > 0:
+                genre_conditions = []
+                for genre in genres:
+                    genre_conditions.append("json_extract(genre_ids, '$') LIKE ?")
+                    params.append(f'%"{genre}"%')
+                conditions.append(f"({' OR '.join(genre_conditions)})")
+
+            # Apply year range filter if provided
+            if year_range and len(year_range) == 2:
+                start_year, end_year = year_range
+                conditions.append(
+                    "substr(release_date, 1, 4) >= ? AND substr(release_date, 1, 4) <= ?"
+                )
+                params.extend([str(start_year), str(end_year)])
+
+            # Finalize query with conditions
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            # Execute the query
+            cursor.execute(query, params)
+            movies = cursor.fetchall()
+
+            # Calculate similarity scores for each movie
+            movie_similarities = []
+            for movie in movies:
+                movie_embedding = json.loads(movie[2])  # Parse the embedding JSON
+                similarity = self._cosine_similarity(
+                    np.array(embedding), np.array(movie_embedding)
+                )
+
+                movie_info = MovieInfo(
+                    id=movie[0],
+                    title=movie[1],
+                    overview=movie[4],
+                    poster_path=movie[5],
+                    release_date=movie[6],
+                    vote_average=movie[7],
+                    popularity=movie[8],
+                )
+
+                movie_similarities.append((movie_info, similarity))
+
+            # Sort by similarity score (highest first)
+            movie_similarities.sort(key=lambda x: x[1], reverse=True)
+
+            # Return the top N movies
+            result = [movie for movie, _ in movie_similarities[:limit]]
+            conn.close()
+            return result
+
+        except Exception as e:
+            logger.error(f"Error getting similar movies: {str(e)}")
+            if conn:
+                conn.close()
+            return []
+
+            # Get the top N movies
 
 
 # Create a singleton instance

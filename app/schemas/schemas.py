@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
-from datetime import datetime
+
 from app.settings import settings
 
 
@@ -32,34 +33,9 @@ class UserPreferences(BaseModel):
     )
 
 
-class WatchedMovie(BaseModel):
-    user_id: str = Field(..., description="Unique identifier for the user")
-    movie_id: int = Field(..., description="TMDB movie ID")
-    title: str = Field(..., description="Movie title")
-    rating: int | None = Field(None, description="User rating (1-10)")
-
-
-class WatchedMovieResponse(BaseModel):
-    movie_id: int
-    title: str
-    rating: int | None
-    watched_at: str
-
-
-class WatchedMoviesResponse(BaseModel):
-    user_id: str
-    movies: List[WatchedMovieResponse]
-
-
 class MovieInfo(BaseModel):
     id: int = Field(..., description="The unique identifier of the movie")
     title: str = Field(..., description="The title of the movie")
-    original_title: str = Field(
-        None, description="The original title of the movie in its original language"
-    )
-    original_language: str = Field(
-        None, description="The original language of the movie"
-    )
     overview: str = Field(None, description="A short description of the movie")
     release_date: str = Field(
         None, description="The release date of the movie in format YYYY-MM-DD"
@@ -72,6 +48,9 @@ class MovieInfo(BaseModel):
     popularity: float = Field(None, description="The popularity score of the movie")
     genre_ids: list[int] = Field(
         None, description="List of genre IDs associated with the movie"
+    )
+    genres: list[str] = Field(
+        None, description="List of genres associated with the movie"
     )
     video: bool = Field(None, description="Whether the movie has a video")
 
@@ -147,16 +126,6 @@ class MovieInfoSchema(BaseModel):
 
 class UserPreferencesSchema(BaseModel):
     user_id: str = Field("1", description="The unique identifier for the user")
-
-
-class MovieEmbeddingData(BaseModel):
-    movie_id: int = Field(..., description="TMDB movie ID")
-    title: str = Field(..., description="Movie title")
-    overview: str | None = Field(None, description="Movie overview/description")
-    genre_ids: List[int] = Field(default_factory=list, description="List of genre IDs")
-    release_date: str | None = Field(None, description="Movie release date")
-    vote_average: float | None = Field(None, description="Average vote rating")
-    popularity: float | None = Field(None, description="Popularity score")
 
 
 class RecommendationResponse(BaseModel):

@@ -1,15 +1,25 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
 
 from app.agent.agent import agent
+from app.clients.scheduled_tasks import scheduler
 from app.schemas.schemas import Question, Response
 from app.settings import APP_TITLE
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title=APP_TITLE)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(title=APP_TITLE, lifespan=lifespan)
 
 
 @app.get("/", include_in_schema=False)

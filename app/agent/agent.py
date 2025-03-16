@@ -1,14 +1,13 @@
 from typing import Any, Dict
 
+import numpy as np
 from smolagents import LiteLLMModel
 
 from app.agent.templates import get_movie_prompt_templates
 from app.schemas.schemas import (
     PreferenceData,
     UserPreferencesResponse,
-    UserPreferencesSchema,
 )
-import numpy as np
 from app.settings import settings
 
 model = LiteLLMModel(
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 def store_user_preference(user_id: str, preferences: PreferenceData) -> str:
     """
     After the model has asked the user about their movie preferences, store the preferences in the database.
-    Derive the names of the favourite movies from the chat with the user.
+    Derive the names of the favourite movies from the chat with the user. Derive the genre of the movies from their names.
 
     Args:
         user_id: Unique identifier for the user
@@ -141,12 +140,19 @@ def get_user_preferences(user_id: str = "1") -> Dict[str, Any]:
 
 
 @tool
-def suggest_movies(user_id: str = "1") -> Dict[str, Any]:
+def suggest_movies(
+    user_id: str = "1", genres: list[str] = None, year_range: tuple = None
+) -> Dict[str, Any]:
     """
-    Suggest movies to the user based on their preferences.
+    Suggest movies to the user based on their preferences. Derive the genres and year range from the user's preferences.
 
     Args:
-        user_id: The unique identifier for the user. Defaults to "1".
+        user_id: The unique identifier for the user. Defaults to "1"
+        genres: List[str] | None = Field(None, description="Preferred movie genre(s)")
+        year_range: tuple[int, int] | None = Field(
+            (1900, datetime.now().year),
+            description="Preferred year range as a tuple of (start_year, end_year)",
+        )
 
     Returns:
         Dict[str, Any]: A dictionary containing the suggested movies.
@@ -154,31 +160,11 @@ def suggest_movies(user_id: str = "1") -> Dict[str, Any]:
     # Get user preferences
     preferences = get_user_preferences(user_id)
     # Get trending movies
-    trending_movies = tmdb_client.get_trending_movies()
+    trending_movies = sqlite_client.get_most_similar_movies(
+        preferences["embedding"], limit=5, genres=genres, year_range=year_range
+    )
 
-    # Calculate similarity between user preferences and trending movies
-    similarity_scores = []
-    for movie in trending_movies.trending_movies:
-        # Calculate cosine similarity between preference embedding and movie embedding
-        movie_embedding = openai_client.get_embedding(movie.overview)
-        similarity = np.dot(preferences["embedding"], movie_embedding) / (
-            np.linalg.norm(preferences["embedding"]) * np.linalg.norm(movie_embedding)
-        )
-        similarity_scores.append((movie.title, similarity))
-
-    # Sort movies by similarity score in descending order
-    sorted_movies = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-
-    # Get the top 5 movies
-    top_movies = [movie for movie, _ in sorted_movies[:5]]
-
-    # Create a response with the top movie titles
-    response = {
-        "movies": top_movies,
-        "message": "Here are your movie suggestions based on your preferences.",
-    }
-
-    return response
+    return trending_movies
 
 
 tools = [
