@@ -49,6 +49,9 @@ class SQLiteClient:
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT UNIQUE NOT NULL,
+                username TEXT,
+                first_name TEXT,
+                last_name TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
@@ -404,7 +407,18 @@ class SQLiteClient:
                 conn.close()
             return []
 
-            # Get the top N movies
+    def add_new_user(self, user_id: str, username: str, first_name: str, last_name: str):
+        """
+        Add a new user to the database.
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO users (user_id, username, first_name, last_name) VALUES (?, ?, ?, ?)", (user_id, username, first_name, last_name))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.error(f"Error adding new user: {str(e)}")
 
 
 # Create a singleton instance

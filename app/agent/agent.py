@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Define tools
 @tool
-def store_user_preference(user_id: str, preferences: PreferenceData) -> str:
+def store_user_preference(user_id: str = "1", preferences: PreferenceData = None) -> str:
     """
     After the model has asked the user about their movie preferences, store the preferences in the database.
     Derive the names of the favourite movies from the chat with the user. Derive the genre of the movies from their names.
@@ -55,11 +55,10 @@ def store_user_preference(user_id: str, preferences: PreferenceData) -> str:
         **preferences
     )  # smolagents doesn't support Pydantic models natively
     try:
-        # Generate embedding for preferences
         preference_text = ""
         for movie in preferences.favourite_movies:
             movie_details = tmdb_client.search_movie(movie)
-            # Initialize genre list if it's None
+
             if preferences.genre is None:
                 preferences.genre = []
 

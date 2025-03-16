@@ -812,7 +812,9 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pytelegrambotapi" },
     { name = "smolagents", extra = ["litellm"] },
+    { name = "telebot" },
     { name = "tenacity" },
     { name = "uvicorn" },
 ]
@@ -835,7 +837,9 @@ requires-dist = [
     { name = "openai", specifier = ">=1.58.1" },
     { name = "pydantic", specifier = ">=2.10.4" },
     { name = "pydantic-settings", specifier = ">=2.7.0" },
+    { name = "pytelegrambotapi", specifier = ">=4.26.0" },
     { name = "smolagents", extras = ["litellm"], specifier = ">=1.10.0" },
+    { name = "telebot", specifier = ">=0.0.5" },
     { name = "tenacity", specifier = ">=9.0.0" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
@@ -1378,6 +1382,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytelegrambotapi"
+version = "4.26.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/83/fb889f80a072199bf98f621a514488c423c56a79b8041c9d860867d18b60/pytelegrambotapi-4.26.0.tar.gz", hash = "sha256:ba92f6a83bf991cbf189577dbc314976032ad8a3fbe6cd631d0ccd79db8523f9", size = 1338623 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/e1/b0d4248f395a19d76a46d1c0950354771c1176b9f27dc30849360363991a/pytelegrambotapi-4.26.0-py3-none-any.whl", hash = "sha256:6a7a10571dcecc01aac917269baf4321a0518d5db1fe57b6a09b76cab2bd6b91", size = 270483 },
+]
+
+[[package]]
 name = "pytest"
 version = "8.3.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1784,6 +1800,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/4c/9b5764bd22eec91c4039ef4c55334e9187085da2d8a2df7bd570869aae18/starlette-0.41.3.tar.gz", hash = "sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835", size = 2574159 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/00/2b325970b3060c7cecebab6d295afe763365822b1306a12eeab198f74323/starlette-0.41.3-py3-none-any.whl", hash = "sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7", size = 73225 },
+]
+
+[[package]]
+name = "telebot"
+version = "0.0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytelegrambotapi" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1f/3b/e4188cffaf370f432f15d518cbb53a438200ee7ef68c6db1acab337634e1/telebot-0.0.5.tar.gz", hash = "sha256:848a5885b57247b65edd0e92647b4372ebd8d41611dca3f344788c11deac2571", size = 4752 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/2f/d8d669be86c42dd2075d7b25bb6de73a3181661a79ef6a3c53dc811f17a1/telebot-0.0.5-py3-none-any.whl", hash = "sha256:50327c240243480d40ade4ea5bea4f464bf57d4ff000ea669fcd705396074863", size = 4840 },
 ]
 
 [[package]]

@@ -46,28 +46,28 @@ just server
 just test  # runs unit tests
 
 curl -X 'POST'   'http://0.0.0.0:8080/question'   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d '{
-  "text": "What is the answer to life, the universe, and everything? Answer with one number."
+  "text": "hey, i like matrix and american pie, what would you recommend?"
 }'
 ```
 
 If you open http://0.0.0.0:8080 you will be redirected to the SwaggerUI where you can test the API.
 
+You can also open the telegram bot to talk to the Movie Recommender @rohlik_movie_recommender_bot
+
 
 ## Known issues and limitations
-* The API is stateless in the sense that it does not store the chat history. The model does not have any context of the previous messages. It was not not mentioned in the requirements.
+* Bot is launched from the main app entrypoint.
+* The preferences is just one table where each user can have only one row basically, ideally we would track different preferences of one user based on time for instance.
+* Smolagent does not have the async interface by default, so the app will not be easily scalable.
+* How the recommendation system works is suboptimal, it filters out by genres and years first and then does the embedding similarity, ideally we would extract some features from the description of the film from the wiki, not the film overview since it can be misleading very often.
+* In general the app is very raw since I developed it in a couple of days for the Rohlik task.
 
 
-## Profiling results
+
+## Profiling
 Before running the profiling make sure to run the server with `just server`.
 To run the profiling UI use `just profile`.
 
 
-* We used Locust to profile the API.
-* We ran 2 tests, both with 100 users, 5 new users per second for 1 miniute.
-    * The first test was with the ollama local LLM server.
-    ![Ollama profiling results](docs/images/total_requests_per_second_1735130634.035_ollama.png)
-    * The second test was with the OpenAI API.
-    ![OpenAI profiling results](docs/images/total_requests_per_second_1735131150.722_openai-api.png)
-* As you can see, the OpenAI API response time is stable and it is around 1.5-2 seconds.
-* The ollama response time linearly increases with the number of requests since this local LLM server is designed for a single user.
+* You can use Locust to profile the API.
 

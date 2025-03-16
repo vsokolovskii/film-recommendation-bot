@@ -8,6 +8,7 @@ from app.agent.agent import agent
 from app.clients.scheduled_tasks import scheduler
 from app.schemas.schemas import Question, Response
 from app.settings import APP_TITLE
+from app.bot.bot_core import bot
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=APP_TITLE, lifespan=lifespan)
+
+bot.infinity_polling()
 
 
 @app.get("/", include_in_schema=False)

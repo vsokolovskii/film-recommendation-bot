@@ -10,7 +10,9 @@ dependencies = [
     "openai>=1.58.1",
     "pydantic-settings>=2.7.0",
     "pydantic>=2.10.4",
+    "pytelegrambotapi>=4.26.0",
     "smolagents[litellm]>=1.10.0",
+    "telebot>=0.0.5",
     "tenacity>=9.0.0",
     "uvicorn>=0.34.0",
 ]
